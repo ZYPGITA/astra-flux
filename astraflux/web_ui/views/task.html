@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AstraFlux - Task Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #09090b;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        /* ==================== Navigation Bar ==================== */
+        .navbar {
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 0 32px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .navbar-brand .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #7c6ef0, #a855f7);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .navbar-brand span {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 4px;
+        }
+
+        .nav-tabs a {
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-tabs a:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .nav-tabs a.active {
+            color: #fff;
+            background: rgba(168, 85, 247, 0.2);
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #34d399, #60a5fa);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .user-name {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-logout {
+            padding: 6px 14px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.3);
+        }
+
+        /* ==================== Main Content ==================== */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 28px 32px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .page-title h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .page-title p {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 13px;
+        }
+
+        .btn-refresh {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #7c6ef0, #a855f7);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-refresh:hover {
+            opacity: 0.9;
+        }
+
+        /* ==================== Stat Cards ==================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px 18px;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .stat-card.active {
+            border-color: rgba(168, 85, 247, 0.4);
+            background: rgba(168, 85, 247, 0.08);
+        }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 6px;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .stat-card .value.v-total {
+            color: #a855f7;
+        }
+
+        .stat-card .value.v-pending {
+            color: #94a3b8;
+        }
+
+        .stat-card .value.v-waiting {
+            color: #60a5fa;
+        }
+
+        .stat-card .value.v-running {
+            color: #fbbf24;
+        }
+
+        .stat-card .value.v-success {
+            color: #34d399;
+        }
+
+        .stat-card .value.v-failed {
+            color: #f87171;
+        }
+
+        .stat-card .value.v-stopped {
+            color: #64748b;
+        }
+
+        /* ==================== Filter Bar ==================== */
+        .filter-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-input {
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .filter-input:focus {
+            border-color: rgba(168, 85, 247, 0.5);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .filter-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .filter-input option {
+            background: #1a1a2e;
+        }
+
+        .filter-input[type="text"] {
+            width: 200px;
+        }
+
+        .filter-select {
+            min-width: 140px;
+        }
+
+        .filter-input[type="date"] {
+            width: 160px;
+        }
+
+        .btn-clear {
+            padding: 10px 16px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-clear:hover {
+            color: rgba(255, 255, 255, 0.7);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* ==================== Data Table ==================== */
+        .table-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .table-header .count {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+
+        thead th {
+            padding: 12px 14px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background 0.1s;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02) !important;
+        }
+
+        tbody td {
+            padding: 12px 14px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* ==================== Status Tags ==================== */
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .tag-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* ==================== Action Buttons ==================== */
+        .btn-action {
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-action:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-action.btn-retry:hover {
+            color: #34d399;
+            border-color: rgba(52, 211, 153, 0.4);
+        }
+
+        .btn-action.btn-stop:hover {
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.4);
+        }
+
+        .btn-action:disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+        }
+
+        /* ==================== Expandable Detail ==================== */
+        .expand-btn {
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.3);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .expand-btn:hover {
+            color: #a855f7;
+            background: rgba(168, 85, 247, 0.1);
+        }
+
+        .detail-row {
+            display: none;
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .detail-row.show {
+            display: table-row;
+        }
+
+        .detail-content {
+            padding: 16px 20px 16px 48px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .detail-item .dlabel {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .detail-item .dvalue {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .detail-body {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+
+        .detail-body pre {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        /* ==================== Pagination ==================== */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .page-info {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .page-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .page-btn {
+            min-width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        .page-btn.active {
+            background: #a855f7;
+            border-color: #a855f7;
+            color: #fff;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+        }
+
+        /* ==================== Confirm Modal ==================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: #16181e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 28px;
+            width: 440px;
+            max-width: 90vw;
+            animation: modalIn 0.2s ease-out;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal h3 {
+            font-size: 17px;
+            margin-bottom: 8px;
+        }
+
+        .modal p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn-cancel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .modal-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .modal-btn-primary {
+            background: #34d399;
+            border: none;
+            color: #fff;
+        }
+
+        .modal-btn-primary:hover {
+            background: #10b981;
+        }
+
+        .modal-btn-danger {
+            background: #f87171;
+            border: none;
+            color: #fff;
+        }
+
+        .modal-btn-danger:hover {
+            background: #ef4444;
+        }
+
+        /* ==================== Loading / Empty States ==================== */
+        .table-empty {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .table-empty-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .table-empty p {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+        }
+
+        .table-loading {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #a855f7;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .table-loading p {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 13px;
+        }
+
+        /* ==================== Toast ==================== */
+        .toast {
+            position: fixed;
+            top: 76px;
+            right: 32px;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+
+        .toast.error {
+            background: rgba(248, 113, 113, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+
+        .toast.info {
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(96, 165, 250, 0.3);
+        }
+
+        .toast-icon {
+            font-size: 16px;
+        }
+
+        /* ==================== Responsive ==================== */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 16px;
+            }
+
+            .nav-tabs {
+                display: none;
+            }
+
+            .main {
+                padding: 20px 16px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .filter-row {
+                flex-direction: column;
+            }
+
+            .filter-input[type="text"] {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation Bar -->
+<nav class="navbar">
+    <div class="navbar-brand">
+        <div class="logo">⚡</div>
+        <span>AstraFlux</span>
+    </div>
+    <div class="nav-tabs">
+        <a href="/views/server.html">Service Management</a>
+        <a href="/views/task.html" class="active">Task Management</a>
+    </div>
+    <div class="navbar-user">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <span class="user-name" id="userName"></span>
+        <button class="btn-logout" onclick="handleLogout()">Logout</button>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="main">
+    <div class="page-header">
+        <div class="page-title">
+            <h1>Task Management</h1>
+            <p id="summaryText">Loading...</p>
+        </div>
+        <button class="btn-refresh" onclick="loadData()">
+            <span>🔄</span> Refresh
+        </button>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card" data-status="" onclick="filterByStatus('')">
+            <div class="label">Total</div>
+            <div class="value v-total" id="statTotal">-</div>
+        </div>
+        <div class="stat-card" data-status="PENDING" onclick="filterByStatus('PENDING')">
+            <div class="label">Pending</div>
+            <div class="value v-pending" id="statPending">0</div>
+        </div>
+        <div class="stat-card" data-status="WAITING" onclick="filterByStatus('WAITING')">
+            <div class="label">Waiting</div>
+            <div class="value v-waiting" id="statWaiting">0</div>
+        </div>
+        <div class="stat-card" data-status="RUNNING" onclick="filterByStatus('RUNNING')">
+            <div class="label">Running</div>
+            <div class="value v-running" id="statRunning">0</div>
+        </div>
+        <div class="stat-card" data-status="SUCCESS" onclick="filterByStatus('SUCCESS')">
+            <div class="label">Success</div>
+            <div class="value v-success" id="statSuccess">0</div>
+        </div>
+        <div class="stat-card" data-status="FAILED" onclick="filterByStatus('FAILED')">
+            <div class="label">Failed</div>
+            <div class="value v-failed" id="statFailed">0</div>
+        </div>
+        <div class="stat-card" data-status="STOPPED" onclick="filterByStatus('STOPPED')">
+            <div class="label">Stopped</div>
+            <div class="value v-stopped" id="statStopped">0</div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-card">
+        <div class="filter-row">
+            <input type="text" class="filter-input" id="filterTaskId" placeholder="Search Task ID..."
+                   oninput="debounceLoad()">
+            <select class="filter-input filter-select" id="filterStatus" onchange="loadData()">
+                <option value="">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="WAITING">Waiting</option>
+                <option value="RUNNING">Running</option>
+                <option value="SUCCESS">Success</option>
+                <option value="FAILED">Failed</option>
+                <option value="STOPPED">Stopped</option>
+                <option value="RETRYING">Retrying</option>
+            </select>
+            <select class="filter-input filter-select" id="filterQueue" onchange="loadData()">
+                <option value="">All Queues</option>
+            </select>
+            <input type="date" class="filter-input" id="filterDate" onchange="loadData()">
+            <button class="btn-clear" onclick="clearFilters()">✕ Clear Filters</button>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-card">
+        <div class="table-header">
+            <h3>Task List</h3>
+            <span class="count" id="tableCount">-</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th style="width:36px;"></th>
+                    <th>Task ID</th>
+                    <th>Queue</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Created</th>
+                    <th>Started</th>
+                    <th>Ended</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="tableBody">
+                <tr>
+                    <td colspan="9">
+                        <div class="table-loading">
+                            <div class="spinner"></div>
+                            <p>Loading...</p>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination" id="paginationContainer">
+            <div class="page-info" id="pageInfo">-</div>
+            <div class="page-buttons" id="pageButtons"></div>
+        </div>
+    </div>
+</main>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+        <h3 id="modalTitle">Confirm Action</h3>
+        <p id="modalMessage">Are you sure you want to perform this action?</p>
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="modal-btn modal-btn-primary" id="modalConfirm">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const PAGE_SIZE = 10;
+    let currentPage = 1;
+    let totalCount = 0;
+    let allTasks = [];
+    let debounceTimer = null;
+    let activeStatus = '';
+
+    // Check login status
+    (function () {
+        const logged = sessionStorage.getItem('logged_in');
+        const user = sessionStorage.getItem('username');
+        if (!logged || logged !== 'true') {
+            window.location.href = '/views/login.html';
+            return;
+        }
+        document.getElementById('userName').textContent = user || 'Admin';
+        document.getElementById('userAvatar').textContent = (user || 'A').charAt(0).toUpperCase();
+    })();
+
+    // Toast notification
+    function showToast(msg, type = 'success') {
+        const el = document.getElementById('toast');
+        let icon = '';
+        if (type === 'success') icon = '✓';
+        else if (type === 'error') icon = '✕';
+        else if (type === 'info') icon = 'ℹ';
+        else icon = '✓';
+        el.innerHTML = `<span class="toast-icon">${icon}</span><span>${msg}</span>`;
+        el.className = `toast ${type} show`;
+        setTimeout(() => el.className = 'toast', 3500);
+    }
+
+    // Logout handler
+    async function handleLogout() {
+        try {
+            await fetch('/api/logout', {method: 'POST'});
+        } catch (e) {
+        }
+        sessionStorage.clear();
+        window.location.href = '/views/login.html';
+    }
+
+    // Debounced load
+    function debounceLoad() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            currentPage = 1;
+            loadData();
+        }, 300);
+    }
+
+    // Filter by status via stat card
+    function filterByStatus(status) {
+        activeStatus = status;
+        document.getElementById('filterStatus').value = status;
+        currentPage = 1;
+
+        // Highlight active card
+        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+        if (status === '') {
+            // For "Total" card, data-status is empty string
+            document.querySelector('.stat-card[data-status=""]')?.classList.add('active');
+        } else {
+            document.querySelector(`.stat-card[data-status="${status}"]`)?.classList.add('active');
+        }
+
+        loadData();
+    }
+
+    // Clear all filters
+    function clearFilters() {
+        document.getElementById('filterTaskId').value = '';
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterQueue').value = '';
+        document.getElementById('filterDate').value = '';
+        activeStatus = '';
+        currentPage = 1;
+
+        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+        // Highlight total card
+        document.querySelector('.stat-card[data-status=""]')?.classList.add('active');
+        loadData();
+    }
+
+    // Load statistics
+    async function loadStats() {
+        try {
+            const res = await fetch('/api/task/stats');
+            const json = await res.json();
+            if (json.status === 'success') {
+                const d = json.data;
+                document.getElementById('statTotal').textContent = d.TOTAL || 0;
+                document.getElementById('statPending').textContent = d.PENDING || 0;
+                document.getElementById('statWaiting').textContent = d.WAITING || 0;
+                document.getElementById('statRunning').textContent = d.RUNNING || 0;
+                document.getElementById('statSuccess').textContent = d.SUCCESS || 0;
+                document.getElementById('statFailed').textContent = d.FAILED || 0;
+                document.getElementById('statStopped').textContent = d.STOPPED || 0;
+            }
+        } catch (e) {
+            console.error('Failed to load stats:', e);
+        }
+    }
+
+    // Load queue list
+    async function loadQueues() {
+        try {
+            const res = await fetch('/api/task/queues');
+            const json = await res.json();
+            if (json.status === 'success') {
+                const select = document.getElementById('filterQueue');
+                const current = select.value;
+                select.innerHTML = '<option value="">All Queues</option>';
+                (json.data || []).forEach(q => {
+                    const opt = document.createElement('option');
+                    opt.value = q;
+                    opt.textContent = q;
+                    select.appendChild(opt);
+                });
+                select.value = current;
+            }
+        } catch (e) {
+            console.error('Failed to load queues:', e);
+        }
+    }
+
+    // Load task data (paginated)
+    async function loadData() {
+        const status = document.getElementById('filterStatus').value;
+        const taskId = document.getElementById('filterTaskId').value.trim();
+        const queue = document.getElementById('filterQueue').value;
+        const date = document.getElementById('filterDate').value;
+
+        const params = new URLSearchParams();
+        // Always include pagination parameters
+        params.set('page', currentPage);
+        params.set('page_size', PAGE_SIZE);
+
+        // Only add filter parameters if they have values
+        if (status) params.set('status', status);
+        if (taskId) params.set('task_id', taskId);
+        if (queue) params.set('queue_name', queue);
+        if (date) params.set('date', date);
+
+        try {
+            const res = await fetch('/api/task/list?' + params.toString());
+            const json = await res.json();
+
+            if (json.status === 'success') {
+                // Ensure total is a number
+                totalCount = parseInt(json.data.total, 10) || 0;
+                allTasks = json.data.tasks || [];
+                renderTable();
+                renderPagination();
+                document.getElementById('summaryText').textContent = `${totalCount} total tasks`;
+                document.getElementById('tableCount').textContent = `${totalCount} total`;
+            } else {
+                showToast(json.message || 'Load failed', 'error');
+            }
+        } catch (e) {
+            console.error('Load data error:', e);
+            showToast('Network error', 'error');
+        }
+    }
+
+    // Render table
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+
+        if (allTasks.length === 0) {
+            tbody.innerHTML = `
+                <tr><td colspan="9">
+                    <div class="table-empty">
+                        <div class="table-empty-icon">📭</div>
+                        <p>No data available</p>
+                    </div>
+                </td></tr>`;
+            return;
+        }
+
+        const statusMap = {
+            'pending': {text: 'Pending', cls: 'tag-pending'},
+            'waiting': {text: 'Waiting', cls: 'tag-waiting'},
+            'running': {text: 'Running', cls: 'tag-running'},
+            'success': {text: 'Success', cls: 'tag-success'},
+            'failed': {text: 'Failed', cls: 'tag-failed'},
+            'stopped': {text: 'Stopped', cls: 'tag-stopped'},
+            'retrying': {text: 'Retrying', cls: 'tag-retrying'}
+        };
+
+        tbody.innerHTML = allTasks.map(t => {
+            const taskId = t.task_id || '';
+            const queue = t.queue_name || '';
+            const status = (t.status || 'pending').toLowerCase();
+            const weight = t.weight ?? 0;
+            const createTime = t.create_time || '';
+            const startTime = t.start_time || '';
+            const endTime = t.end_time || '';
+            const body = t.body || {};
+            const sourceId = t.source_id || '';
+            const dependsOn = t.depends_on || [];
+
+            const st = statusMap[status] || {text: status, cls: 'tag-pending'};
+
+            const canRetry = ['failed', 'stopped'].includes(status);
+            const canStop = ['pending', 'waiting', 'running', 'retrying'].includes(status);
+
+            const shortId = taskId.length > 16 ? taskId.substring(0, 16) + '...' : taskId;
+
+            return `
+                <tr>
+                    <td>
+                        <span class="expand-btn" onclick="event.stopPropagation(); toggleDetail('${esc(taskId)}')">
+                            <span id="arrow-${css(taskId)}" style="transition:transform 0.2s;display:inline-block;">▶</span>
+                        </span>
+                    </td>
+                    <td style="font-family:'SF Mono',monospace;font-size:12px;" title="${esc(taskId)}">${esc(shortId)}</td>
+                    <td>${esc(queue)}</td>
+                    <td><span class="tag ${st.cls}"><span class="tag-dot"></span>${st.text}</span></td>
+                    <td>${weight}</td>
+                    <td>${esc(createTime)}</td>
+                    <td>${esc(startTime) || '<span style="color:rgba(255,255,255,0.2)">-</span>'}</td>
+                    <td>${esc(endTime) || '<span style="color:rgba(255,255,255,0.2)">-</span>'}</td>
+                    <td onclick="event.stopPropagation();">
+                        <button class="btn-action btn-retry" onclick="event.stopPropagation(); retryTask('${esc(taskId)}')" ${canRetry ? '' : 'disabled'} title="Retry">↻ Retry</button>
+                        <button class="btn-action btn-stop" onclick="event.stopPropagation(); stopTask('${esc(taskId)}')" ${canStop ? '' : 'disabled'} title="Terminate">■ Terminate</button>
+                    </td>
+                </tr>
+                <tr class="detail-row" id="detail-${css(taskId)}">
+                    <td colspan="9">
+                        <div class="detail-content">
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <span class="dlabel">Task ID</span>
+                                    <span class="dvalue" style="font-family:'SF Mono',monospace;font-size:12px;">${esc(taskId)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="dlabel">Queue</span>
+                                    <span class="dvalue">${esc(queue)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="dlabel">Status</span>
+                                    <span class="dvalue"><span class="tag ${st.cls}"><span class="tag-dot"></span>${st.text}</span></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="dlabel">Priority</span>
+                                    <span class="dvalue">${weight}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="dlabel">Source ID</span>
+                                    <span class="dvalue">${esc(sourceId) || '-'}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="dlabel">Depends On</span>
+                                    <span class="dvalue">${dependsOn.length > 0 ? esc(dependsOn.join(', ')) : 'None'}</span>
+                                </div>
+                            </div>
+                            <div class="detail-body">
+                                <pre>${esc(JSON.stringify(body, null, 2))}</pre>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // Toggle detail row
+    function toggleDetail(taskId) {
+        const detailRow = document.getElementById(`detail-${css(taskId)}`);
+        const arrow = document.getElementById(`arrow-${css(taskId)}`);
+        if (!detailRow) return;
+
+        if (detailRow.classList.contains('show')) {
+            detailRow.classList.remove('show');
+            arrow.style.transform = 'rotate(0deg)';
+        } else {
+            detailRow.classList.add('show');
+            arrow.style.transform = 'rotate(90deg)';
+        }
+    }
+
+    // Render pagination
+    function renderPagination() {
+        const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+        const info = document.getElementById('pageInfo');
+        const btns = document.getElementById('pageButtons');
+
+        if (totalCount === 0) {
+            info.textContent = 'No data';
+            btns.innerHTML = '';
+            return;
+        }
+
+        const start = (currentPage - 1) * PAGE_SIZE + 1;
+        const end = Math.min(currentPage * PAGE_SIZE, totalCount);
+        info.textContent = `${start}-${end} of ${totalCount}`;
+
+        let html = '';
+
+        // Previous button
+        html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goPage(${currentPage - 1})">‹</button>`;
+
+        const range = getPageRange(currentPage, totalPages);
+        range.forEach(p => {
+            if (p === '...') {
+                html += `<button class="page-btn" disabled>...</button>`;
+            } else {
+                html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
+            }
+        });
+
+        // Next button
+        html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goPage(${currentPage + 1})">›</button>`;
+
+        btns.innerHTML = html;
+    }
+
+    function getPageRange(current, total) {
+        if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
+        if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
+        if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
+        return [1, '...', current - 1, current, current + 1, '...', total];
+    }
+
+    function goPage(page) {
+        if (page === currentPage) return;
+        currentPage = page;
+        loadData();
+        // Scroll to table top
+        document.querySelector('.table-card').scrollIntoView({behavior: 'smooth', block: 'start'});
+    }
+
+    // Retry task
+    async function retryTask(taskId) {
+        const shortId = taskId.length > 12 ? taskId.substring(0, 12) + '...' : taskId;
+        showConfirm(
+            'Retry Task',
+            `Are you sure you want to retry task ${esc(shortId)}? It will be re-queued for execution.`,
+            'primary',
+            async () => {
+                showToast('Submitting retry request...', 'info');
+                try {
+                    const response = await fetch('/api/task/retry', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({task_id: taskId})
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.status === 'success') {
+                        showToast(`Task ${shortId} has been queued for retry`, 'success');
+                        // Refresh current page data
+                        await loadData();
+                        await loadStats();
+                    } else {
+                        const errorMsg = result.message || result.error || 'Retry failed, please try again';
+                        showToast(errorMsg, 'error');
+                    }
+                } catch (error) {
+                    console.error('Retry request error:', error);
+                    showToast('Network error or service unavailable', 'error');
+                }
+            }
+        );
+    }
+
+    // Stop task
+    async function stopTask(taskId) {
+        const shortId = taskId.length > 12 ? taskId.substring(0, 12) + '...' : taskId;
+        showConfirm(
+            'Terminate Task',
+            `Are you sure you want to terminate task ${esc(shortId)}? This action cannot be undone.`,
+            'danger',
+            async () => {
+                showToast('Submitting termination request...', 'info');
+                try {
+                    const response = await fetch('/api/task/terminate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({task_id: taskId})
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.status === 'success') {
+                        showToast(`Task ${shortId} has been terminated`, 'success');
+                        await loadData();
+                        await loadStats();
+                    } else {
+                        const errorMsg = result.message || result.error || 'Termination failed, please try again';
+                        showToast(errorMsg, 'error');
+                    }
+                } catch (error) {
+                    console.error('Termination request error:', error);
+                    showToast('Network error or service unavailable', 'error');
+                }
+            }
+        );
+    }
+
+    // Show confirmation modal
+    function showConfirm(title, message, type, callback) {
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalMessage').textContent = message;
+        document.getElementById('confirmModal').classList.add('show');
+
+        const confirmBtn = document.getElementById('modalConfirm');
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+        if (type === 'danger') {
+            newConfirmBtn.className = 'modal-btn modal-btn-danger';
+            newConfirmBtn.textContent = 'Confirm Terminate';
+        } else {
+            newConfirmBtn.className = 'modal-btn modal-btn-primary';
+            newConfirmBtn.textContent = 'Confirm Retry';
+        }
+
+        newConfirmBtn.onclick = () => {
+            closeModal();
+            if (typeof callback === 'function') {
+                callback();
+            }
+        };
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('confirmModal');
+        if (modal) modal.classList.remove('show');
+    }
+
+    // Close modal when clicking overlay
+    document.getElementById('confirmModal').addEventListener('click', function (e) {
+        if (e.target === this) closeModal();
+    });
+
+    // Close modal on ESC
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    // HTML escape
+    function esc(s) {
+        if (!s) return '';
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function css(s) {
+        return String(s).replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+
+    // Initialize
+    loadData();
+    loadStats();
+    loadQueues();
+</script>
+</body>
+</html>

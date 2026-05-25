@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AstraFlux - Service Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #09090b;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        /* ==================== Navigation Bar ==================== */
+        .navbar {
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 0 32px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .navbar-brand .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #7c6ef0, #a855f7);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .navbar-brand span {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 4px;
+        }
+
+        .nav-tabs a {
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-tabs a:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .nav-tabs a.active {
+            color: #fff;
+            background: rgba(168, 85, 247, 0.2);
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #34d399, #60a5fa);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .user-name {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-logout {
+            padding: 6px 14px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.3);
+        }
+
+        /* ==================== Main Content ==================== */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 28px 32px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .page-title h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .page-title p {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 13px;
+        }
+
+        .page-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* ==================== Stat Cards ==================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 20px 24px;
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-card .value.purple {
+            color: #a855f7;
+        }
+
+        .stat-card .value.green {
+            color: #34d399;
+        }
+
+        .stat-card .value.yellow {
+            color: #fbbf24;
+        }
+
+        .stat-card .value.blue {
+            color: #60a5fa;
+        }
+
+        /* ==================== Filter Bar ==================== */
+        .filter-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-input {
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .filter-input:focus {
+            border-color: rgba(168, 85, 247, 0.5);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .filter-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .filter-input option {
+            background: #1a1a2e;
+        }
+
+        .filter-input[type="text"] {
+            width: 220px;
+        }
+
+        .filter-select {
+            min-width: 160px;
+        }
+
+        .btn-refresh {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #7c6ef0, #a855f7);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-refresh:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-refresh:active {
+            transform: translateY(0);
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-left: auto;
+        }
+
+        .auto-refresh input {
+            accent-color: #a855f7;
+            width: 14px;
+            height: 14px;
+        }
+
+        .auto-refresh select {
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 12px;
+        }
+
+        /* ==================== Data Table ==================== */
+        .table-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .table-header .count {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background 0.1s;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02) !important;
+        }
+
+        tbody td {
+            padding: 14px 16px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* ==================== Status Tags ==================== */
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .tag-online {
+            background: rgba(52, 211, 153, 0.12);
+            color: #34d399;
+        }
+
+        .tag-offline {
+            background: rgba(248, 113, 113, 0.12);
+            color: #f87171;
+        }
+
+        .tag-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* ==================== Progress Bar ==================== */
+        .slot-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slot-bar {
+            width: 100px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .slot-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .slot-bar-fill.green {
+            background: linear-gradient(90deg, #34d399, #4ade80);
+        }
+
+        .slot-bar-fill.yellow {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+        }
+
+        .slot-bar-fill.red {
+            background: linear-gradient(90deg, #f87171, #ef4444);
+        }
+
+        .slot-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            min-width: 70px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ==================== Action Buttons ==================== */
+        .btn-action {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-action:hover {
+            color: #a855f7;
+            border-color: rgba(168, 85, 247, 0.4);
+            background: rgba(168, 85, 247, 0.1);
+        }
+
+        /* ==================== Edit Mode ==================== */
+        .edit-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .edit-input {
+            width: 60px;
+            padding: 6px 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid #a855f7;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+            text-align: center;
+            outline: none;
+        }
+
+        .btn-save {
+            padding: 6px 10px;
+            background: #a855f7;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 11px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-save:hover {
+            opacity: 0.9;
+        }
+
+        .btn-cancel {
+            padding: 6px 10px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel:hover {
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.3);
+        }
+
+        /* ==================== Empty / Loading States ==================== */
+        .table-empty {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .table-empty-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .table-empty p {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+        }
+
+        .table-loading {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #a855f7;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .table-loading p {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 13px;
+        }
+
+        /* ==================== Toast ==================== */
+        .toast {
+            position: fixed;
+            top: 76px;
+            right: 32px;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+
+        .toast.error {
+            background: rgba(248, 113, 113, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+
+        .toast-icon {
+            font-size: 16px;
+        }
+
+        /* ==================== Responsive ==================== */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 16px;
+            }
+
+            .nav-tabs {
+                display: none;
+            }
+
+            .main {
+                padding: 20px 16px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .filter-row {
+                flex-direction: column;
+            }
+
+            .filter-input[type="text"] {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation Bar -->
+<nav class="navbar">
+    <div class="navbar-brand">
+        <div class="logo">⚡</div>
+        <span>AstraFlux</span>
+    </div>
+
+    <div class="nav-tabs">
+        <a href="/views/server.html" class="active">Service Management</a>
+        <a href="/views/task.html">Task Management</a>
+    </div>
+
+    <div class="navbar-user">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <span class="user-name" id="userName"></span>
+        <button class="btn-logout" onclick="handleLogout()">Logout</button>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="main">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-title">
+            <h1>Service Management</h1>
+            <p id="summaryText">Loading...</p>
+        </div>
+        <div class="page-actions">
+            <button class="btn-refresh" onclick="loadData()">
+                <span>🔄</span> Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+            <div class="label">Total Services</div>
+            <div class="value purple" id="statServices">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Total Workers</div>
+            <div class="value blue" id="statWorkers">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Running Processes</div>
+            <div class="value yellow" id="statRunning">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Available Slots</div>
+            <div class="value green" id="statAvailable">-</div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-card">
+        <div class="filter-row">
+            <input type="text" class="filter-input" id="filterService" placeholder="Search service name..."
+                   oninput="applyFilter()">
+            <input type="text" class="filter-input" id="filterWorker" placeholder="Search Worker ID..."
+                   oninput="applyFilter()">
+            <select class="filter-input filter-select" id="filterStatus" onchange="applyFilter()">
+                <option value="">All Status</option>
+                <option value="online">Online</option>
+                <option value="offline">Full</option>
+            </select>
+            <div class="auto-refresh">
+                <input type="checkbox" id="autoRefresh" checked>
+                <label for="autoRefresh">Auto refresh</label>
+                <select id="refreshInterval">
+                    <option value="10">10s</option>
+                    <option value="30" selected>30s</option>
+                    <option value="60">60s</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-card">
+        <div class="table-header">
+            <h3>Service List</h3>
+            <span class="count" id="tableCount">-</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Service Name</th>
+                    <th>Worker ID</th>
+                    <th>IP Address</th>
+                    <th>Version</th>
+                    <th>Status</th>
+                    <th>Process Slots</th>
+                    <th>Max Processes</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="tableBody">
+                <tr>
+                    <td colspan="8">
+                        <div class="table-loading">
+                            <div class="spinner"></div>
+                            <p>Loading...</p></div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+    let allData = [];
+    let refreshTimer = null;
+
+    // Check login status
+    (function checkAuth() {
+        const logged = sessionStorage.getItem('logged_in');
+        const user = sessionStorage.getItem('username');
+
+        if (!logged || logged !== 'true') {
+            window.location.href = '/views/login.html';
+            return;
+        }
+
+        document.getElementById('userName').textContent = user || 'Admin';
+        document.getElementById('userAvatar').textContent = (user || 'A').charAt(0).toUpperCase();
+    })();
+
+    // Toast notification
+    function showToast(msg, type = 'success') {
+        const el = document.getElementById('toast');
+        const icon = type === 'success' ? '✓' : '✕';
+        el.innerHTML = `<span class="toast-icon">${icon}</span><span>${msg}</span>`;
+        el.className = `toast ${type} show`;
+        setTimeout(() => el.className = 'toast', 3500);
+    }
+
+    // Logout handler
+    async function handleLogout() {
+        try {
+            await fetch('/api/logout', {method: 'POST'});
+        } catch (e) {
+        }
+        sessionStorage.clear();
+        window.location.href = '/views/login.html';
+    }
+
+    // Load data
+    async function loadData() {
+        try {
+            const res = await fetch('/api/server/list');
+            const json = await res.json();
+
+            if (json.status === 'success') {
+                allData = json.data || [];
+                applyFilter();
+                updateStats();
+            } else {
+                showToast(json.message || 'Load failed', 'error');
+            }
+        } catch (e) {
+            showToast('Network error', 'error');
+        }
+    }
+
+    // Update statistics
+    function updateStats() {
+        let services = allData.length;
+        let workers = 0, running = 0, available = 0;
+
+        allData.forEach(s => {
+            workers += s.worker_count || 0;
+            (s.workers || []).forEach(w => {
+                running += w.run_process_count || 0;
+                available += w.available_slots || 0;
+            });
+        });
+
+        document.getElementById('statServices').textContent = services;
+        document.getElementById('statWorkers').textContent = workers;
+        document.getElementById('statRunning').textContent = running;
+        document.getElementById('statAvailable').textContent = available;
+        document.getElementById('summaryText').textContent = `${services} services · ${workers} workers · ${available} available slots`;
+    }
+
+    // Apply filters
+    function applyFilter() {
+        const serviceFilter = document.getElementById('filterService').value.toLowerCase();
+        const workerFilter = document.getElementById('filterWorker').value.toLowerCase();
+        const statusFilter = document.getElementById('filterStatus').value;
+
+        const tbody = document.getElementById('tableBody');
+        let rows = [];
+        let totalRows = 0;
+
+        allData.forEach(service => {
+            if (serviceFilter && !service.service_name.toLowerCase().includes(serviceFilter)) return;
+
+            const workers = service.workers || [];
+            if (workers.length === 0) {
+                rows.push({service: service.service_name, empty: true});
+                totalRows++;
+            }
+
+            workers.forEach(w => {
+                if (workerFilter && !(w.unique_id || '').toLowerCase().includes(workerFilter)) return;
+                if (statusFilter === 'online' && (w.available_slots || 0) <= 0) return;
+                if (statusFilter === 'offline' && (w.available_slots || 0) > 0) return;
+
+                rows.push({service: service.service_name, worker: w});
+                totalRows++;
+            });
+        });
+
+        document.getElementById('tableCount').textContent = `${totalRows} total`;
+
+        if (rows.length === 0) {
+            tbody.innerHTML = `
+                    <tr><td colspan="8">
+                        <div class="table-empty">
+                            <div class="table-empty-icon">📭</div>
+                            <p>No data available</p>
+                        </div>
+                    </td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = rows.map((r, idx) => {
+            if (r.empty) {
+                return `<tr>
+                        <td style="font-weight:600;">${esc(r.service)}</td>
+                        <td colspan="5" style="color:rgba(255,255,255,0.3);font-style:italic;">No online workers</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>`;
+            }
+
+            const w = r.worker;
+            const isOnline = (w.available_slots || 0) > 0;
+            const maxP = w.max_process || 0;
+            const runP = w.run_process_count || 0;
+            const avail = w.available_slots || 0;
+            const pct = maxP > 0 ? Math.round((runP / maxP) * 100) : 0;
+            const barColor = pct > 90 ? 'red' : pct > 60 ? 'yellow' : 'green';
+
+            return `<tr data-uid="${esc(w.unique_id)}">
+                    <td style="font-weight:600;">${esc(r.service)}</td>
+                    <td style="font-family:'SF Mono',monospace;font-size:12px;">${esc(w.unique_id)}</td>
+                    <td style="font-family:'SF Mono',monospace;font-size:12px;">${esc(w.service_ipaddr || '-')}</td>
+                    <td>${esc(w.version || '-')}</td>
+                    <td>
+                        <span class="tag ${isOnline ? 'tag-online' : 'tag-offline'}">
+                            <span class="tag-dot"></span>
+                            ${isOnline ? 'Online' : 'Full'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="slot-info">
+                            <div class="slot-bar"><div class="slot-bar-fill ${barColor}" style="width:${pct}%"></div></div>
+                            <span class="slot-text">${avail} / ${maxP} available</span>
+                        </div>
+                    </td>
+                    <td id="mp-${css(w.unique_id)}">${maxP}</td>
+                    <td>
+                        <button class="btn-action" onclick="startEdit('${esc(w.unique_id)}', ${maxP})">Edit</button>
+                    </td>
+                </tr>`;
+        }).join('');
+    }
+
+    // Start editing
+    function startEdit(uid, currentVal) {
+        const row = document.querySelector(`tr[data-uid="${uid}"]`);
+        if (!row) return;
+
+        const mpCell = row.querySelector('td:nth-child(7)');
+        const actCell = row.querySelector('td:nth-child(8)');
+        const safeId = css(uid);
+
+        mpCell.innerHTML = `<input class="edit-input" id="edit-${safeId}" type="number" min="1" max="100" value="${currentVal}">`;
+        actCell.innerHTML = `
+                <div class="edit-wrapper">
+                    <button class="btn-save" onclick="saveEdit('${esc(uid)}')">Save</button>
+                    <button class="btn-cancel" onclick="applyFilter()">Cancel</button>
+                </div>
+            `;
+
+        document.getElementById(`edit-${safeId}`).focus();
+    }
+
+    // Save edit
+    async function saveEdit(uid) {
+        const input = document.getElementById(`edit-${css(uid)}`);
+        if (!input) return;
+
+        const val = parseInt(input.value, 10);
+
+        if (isNaN(val) || val < 1) {
+            showToast('Max processes must be ≥ 1', 'error');
+            return;
+        }
+
+        if (val > 100) {
+            showToast('Max processes cannot exceed 100', 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/server/max_process', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({unique_id: uid, max_process: val})
+            });
+
+            const json = await res.json();
+
+            if (json.status === 'success') {
+                showToast('Update successful');
+                loadData();
+            } else {
+                showToast(json.message || 'Update failed', 'error');
+            }
+        } catch (e) {
+            showToast('Network error', 'error');
+        }
+    }
+
+    // HTML escape
+    function esc(s) {
+        if (!s) return '';
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function css(s) {
+        return String(s).replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+
+    // Auto refresh setup
+    function setupAutoRefresh() {
+        if (refreshTimer) clearInterval(refreshTimer);
+
+        if (document.getElementById('autoRefresh').checked) {
+            const sec = parseInt(document.getElementById('refreshInterval').value, 10);
+            refreshTimer = setInterval(loadData, sec * 1000);
+        }
+    }
+
+    document.getElementById('autoRefresh').addEventListener('change', setupAutoRefresh);
+    document.getElementById('refreshInterval').addEventListener('change', setupAutoRefresh);
+
+    // Initialize
+    loadData();
+    setupAutoRefresh();
+</script>
+</body>
+</html>

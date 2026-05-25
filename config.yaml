@@ -1,0 +1,50 @@
+mongodb:
+  host: 127.0.0.1
+  port: 27017
+  db: astraflux
+  username: scheduleAdmin
+  password: scheduleAdminPassword
+
+redis:
+  host: 127.0.0.1
+  port: 6379
+  password: scheduleAdminPassword
+  db_index: 8
+
+rabbitmq:
+  host: 127.0.0.1
+  port: 5672
+  username: scheduleAdmin
+  password: scheduleAdminPassword
+
+rpc:
+  call_timeout: 30
+  max_retries: 3
+  retry_base_delay: 1.0
+  retry_max_delay: 30.0
+  circuit_breaker_threshold: 5
+  circuit_breaker_recovery: 30
+
+logger:
+  path: logs
+  level: INFO
+
+web:
+  port: 7860
+  username: scheduleAdmin
+  password: scheduleAdminPassword
+
+openai:
+  openclaw:
+    server: http://127.0.0.1:18789
+    sessionKey: x-session
+    token: fdab5ad1568d556d5f81ff5252d09cbca10fa6736af84b56
+    temporary_directory: temporary_directory
+    expand_skill_directory: skill
+
+  modelApi:
+    server: http://192.168.208.1:1234/v1
+    name: qwen/qwen3.5-9b
+    apiKey: sk-lm-eMrfKTYy:bB4kywtBdPBwOMbMjs6r
+    temporary_directory: temporary_directory
+    expand_skill_directory: skill
