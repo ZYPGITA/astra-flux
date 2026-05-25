@@ -14,6 +14,10 @@ Install
 
     pip install astraflux
 
+.. code-block:: bash
+
+    https://github.com/ZYPGITA/astra-flux
+
 Requires Python 3.9+, with MongoDB, Redis, and RabbitMQ running.
 
 Quick Start
