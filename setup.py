@@ -5,7 +5,7 @@ with open("README.en.rst", "r", encoding="utf-8") as f:
 
 setup(
     name='astraflux',
-    version='1.5.0',
+    version='1.5.1',
     description="AstraFlux Description",
     long_description=long_description,
     include_package_data=True,
@@ -17,7 +17,7 @@ setup(
     maintainer='YanPing',
     maintainer_email='zyphhxx@foxmail.com',
     license='MIT License',
-    url='https://github.com/ZYPGITA/astraflux',
+    url='https://github.com/ZYPGITA/astra-flux',
     packages=[
         'astraflux',
         'astraflux.boot',
