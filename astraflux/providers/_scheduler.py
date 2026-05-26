@@ -286,6 +286,13 @@ class DistributedScheduler:
         if getattr(self, '_initialized', False):
             return
 
+        # Ensure all multiprocessing.Process calls in this process use 'spawn'
+        # to avoid fork-inheritance problems (singletons, thread locks, file handles).
+        try:
+            multiprocessing.set_start_method('spawn')
+        except RuntimeError:
+            pass  # Already set (e.g. by RetryableProcessPool._ensure_start_method)
+
         self.config = config
         self.logger = logger
         self.local_ip = ipaddr()

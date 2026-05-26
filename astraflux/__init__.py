@@ -85,6 +85,9 @@ __all__ = [
 class AstraFlux:
     _instance = None
     _initialized = False
+    # Track whether the current process is a fork child that inherited the instance.
+    # Set in __init__ so that reconfigure / reset will work properly.
+    _fork_inherited = False
 
     def __new__(cls, *args, **kwargs):
         """
@@ -102,11 +105,18 @@ class AstraFlux:
         """
         if self._initialized:
             if yaml_path is not None:
-                raise RuntimeError(
-                    "AstraFlux is already initialized. "
-                    "Use AstraFlux.reconfigure(yaml_path, current_dir) to reinitialize, "
-                    "or access the singleton with AstraFlux.instance()"
-                )
+                # Fork scenario: multiprocessing child (Linux/Mac fork spawn)
+                # inherited a fully initialized singleton from the parent.
+                # Sub-processes already have all fixtures in memory, so
+                # just refresh the globals if the paths differ, and carry on.
+                from .config.globals import get_current_dir, get_yaml_path
+                cur_yaml = get_yaml_path()
+                cur_dir = get_current_dir()
+                if (cur_yaml != yaml_path) or (cur_dir != current_dir):
+                    from .config.globals import set_current_dir, set_yaml_path
+                    set_current_dir(current_dir)
+                    set_yaml_path(yaml_path)
+                return
             return
 
         if yaml_path is None or current_dir is None:
@@ -151,4 +161,5 @@ class AstraFlux:
 
         cls._instance = None
         cls._initialized = False
+        cls._fork_inherited = False
         return cls(yaml_path, current_dir)
