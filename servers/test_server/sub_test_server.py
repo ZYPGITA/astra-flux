@@ -24,7 +24,7 @@ class WorkerFunction(WorkerConstructor):
         self.logger.info(f"worker done {data['task_id']}")
 
         self.logger.info(f'snowflake_id == {snowflake_id()}')
-        self.logger.warning(f'snowflake_id == {devices_id()}')
+        self.logger.warning(f'devices_id == {devices_id()}')
 
         data = proxy_call(
             service_name='test_server',

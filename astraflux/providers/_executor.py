@@ -3,7 +3,6 @@
 import time
 import dill
 import queue
-import platform
 import threading
 import traceback
 import multiprocessing as mp
@@ -395,8 +394,18 @@ class RetryableProcessPool:
         self._submit_lock = threading.Lock()
 
     def _ensure_start_method(self):
-        """Set multiprocessing start method once, only on Windows."""
-        if not self._start_method_set and platform.system() == 'Windows':
+        """Set multiprocessing start method to 'spawn' for cross-platform safety.
+
+        On Linux the default start method is 'fork', which inherits the parent
+        process's entire memory (including thread locks, open file handles,
+        singleton class-level state like AstraFlux._initialized).  Using 'spawn'
+        avoids all of these problems and makes behaviour identical across
+        Linux, macOS and Windows.
+
+        Note: set_start_method can only be called once per Python process, so
+        we catch RuntimeError and continue if it was already set elsewhere.
+        """
+        if not self._start_method_set:
             try:
                 mp.set_start_method('spawn')
             except RuntimeError:

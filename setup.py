@@ -1,11 +1,11 @@
 from setuptools import setup
 
-with open("README.en.rst", "r", encoding="utf-8") as f:
+with open("README.rst", "r", encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
     name='astraflux',
-    version='1.5.1',
+    version='1.5.2',
     description="AstraFlux Description",
     long_description=long_description,
     include_package_data=True,
