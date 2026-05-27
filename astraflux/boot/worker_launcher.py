@@ -135,6 +135,9 @@ class MessageQueueHandler:
     dispatches to available worker processes with load balancing.
     """
 
+    _STATUS_CACHE_TTL = 5
+    _CAPACITY_SYNC_INTERVAL = 30
+
     def __init__(self, class_path: str, yaml_config: str, current_dir: str, logger, worker_name: str, unique_id: str):
         """
         Initialize message queue handler.
@@ -153,6 +156,15 @@ class MessageQueueHandler:
         self.logger = logger
         self.worker_name = worker_name
         self.unique_id = unique_id
+
+        self._task_status_cache = {}
+        self._task_status_cache_time = {}
+
+        self._available_slots_cache = None
+        self._available_slots_cache_time = 0
+        self._AVAILABLE_SLOTS_CACHE_TTL = 1
+
+        self._init_capacity_from_redis()
 
     def handle_incoming_message(self, channel, method, properties, body):
         """
@@ -230,35 +242,101 @@ class MessageQueueHandler:
             Boolean indicating if task should be executed
         """
 
-        # System services always execute
         if BUILD.CONFIG.SYSTEM_SERVICE_NAME.value in self.worker_name:
             return True
 
-        # Check task status from Mongodb
+        task_id = task_data.get(TASK.CONFIG.ID.value)
+        if not task_id:
+            return True
+
+        cached_status = self._get_cached_task_status(task_id)
+        if cached_status is not None:
+            return cached_status != STATUS.STOPPED.value
+
         try:
             tasks = mongodb_find_from_task(
-                query={TASK.CONFIG.ID.value: task_data[TASK.CONFIG.ID.value]},
+                query={TASK.CONFIG.ID.value: task_id},
                 fields={'status': 1}
             )
             if tasks and len(tasks) > 0:
                 task_status = tasks[0].get('status')
+                self._cache_task_status(task_id, task_status)
                 return task_status != STATUS.STOPPED.value
         except Exception as e:
             self.logger.error(f'Failed to check task status: {e}')
 
         return True
 
+    def _get_cached_task_status(self, task_id: str):
+        """
+        Get task status from local cache if not expired.
+
+        Args:
+            task_id: Task ID
+
+        Returns:
+            Task status string or None if not in cache or expired
+        """
+        if task_id in self._task_status_cache:
+            cache_time = self._task_status_cache_time.get(task_id, 0)
+            if time.time() - cache_time < self._STATUS_CACHE_TTL:
+                return self._task_status_cache[task_id]
+            else:
+                del self._task_status_cache[task_id]
+                del self._task_status_cache_time[task_id]
+        return None
+
+    def _cache_task_status(self, task_id: str, status: str):
+        """
+        Cache task status locally.
+
+        Args:
+            task_id: Task ID
+            status: Task status string
+        """
+        self._task_status_cache[task_id] = status
+        self._task_status_cache_time[task_id] = time.time()
+
+    def _init_capacity_from_redis(self):
+        """Initialize capacity data from Redis on startup."""
+        try:
+            from astraflux.exports import redis_get_max_process
+            self._max_process = redis_get_max_process(unique_id=self.unique_id)
+            if self._max_process is None:
+                self._max_process = 10
+            self.logger.debug(f"Initialized capacity: max_process={self._max_process}")
+        except Exception as e:
+            self.logger.warning(f"Failed to init capacity from Redis: {e}, using default max_process=10")
+            self._max_process = 10
+
+    def _get_cached_available_slots(self):
+        """
+        Get available slots from cache or Redis.
+
+        Returns:
+            Number of available slots
+        """
+        current_time = time.time()
+        if current_time - self._available_slots_cache_time < self._AVAILABLE_SLOTS_CACHE_TTL:
+            return self._available_slots_cache
+
+        try:
+            self._available_slots_cache = redis_get_available_slots(unique_id=self.unique_id)
+            self._available_slots_cache_time = current_time
+        except Exception as e:
+            self.logger.warning(f"Failed to get available slots from Redis: {e}")
+            self._available_slots_cache = 0
+
+        return self._available_slots_cache
+
     def _has_available_worker_capacity(self) -> bool:
         """
-        Check if worker has capacity to handle new tasks.
+        Check if worker has capacity to handle new tasks using cached Redis query.
 
         Returns:
             Boolean indicating if worker has available capacity
         """
-
-        available_slot = redis_get_available_slots(
-            unique_id=self.unique_id,
-        )
+        available_slot = self._get_cached_available_slots()
         return available_slot > 0
 
     def _execute_task_in_isolated_process(self, task_data: dict):
