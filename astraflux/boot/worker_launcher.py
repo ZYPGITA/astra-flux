@@ -43,7 +43,6 @@ class TaskExecutor:
 
         worker_process_id = os.getpid()
 
-        # ComponentBuilder worker component for task execution
         worker_builder = ComponentBuilder(
             class_path=class_path,
             component_type='worker',
@@ -53,30 +52,25 @@ class TaskExecutor:
             task_id=task_data[TASK.CONFIG.ID.value]
         )
 
-        # Update task status to running
         TaskExecutor._update_task_status(
             worker_component, task_data, worker_process_id,
             STATUS.RUNNING.value
         )
 
         try:
-            # Register worker as running
             redis_add_to_run_process(
                 unique_id=worker_component.unique_id,
                 process_id=worker_process_id
             )
 
-            # Execute the task
             worker_component().run(task_data)
 
-            # Mark task as successfully completed
             TaskExecutor._update_task_status(
                 worker_component, task_data, worker_process_id,
                 STATUS.SUCCESS.value
             )
 
         except Exception as execution_error:
-            # Mark task as failed and record error
             TaskExecutor._update_task_status(
                 worker_component, task_data, worker_process_id,
                 STATUS.FAILED.value
@@ -85,7 +79,6 @@ class TaskExecutor:
                 f"Task execution failed: {execution_error}"
             )
         finally:
-            # Cleanup worker registration
             redis_remove_from_run_process(
                 unique_id=worker_component.unique_id,
                 process_id=worker_process_id
@@ -181,51 +174,42 @@ class MessageQueueHandler:
         try:
             task_data = json.loads(body.decode())
 
-            # Validate task data contains required ID
             if TASK.CONFIG.ID.value not in task_data:
                 self.logger.error(f'Invalid task data missing ID: {task_data}')
-                # ACK invalid messages to remove them from queue (no point retrying)
+                # No point retrying invalid messages
                 channel.basic_ack(delivery_tag=delivery_tag)
                 return
 
-            # Check if task should be executed
             if not self._should_execute_task(task_data):
-                # Task should not be executed (e.g., status is STOPPED)
-                # ACK to remove from queue
+                # Task status is STOPPED or similar, no need to process
                 channel.basic_ack(delivery_tag=delivery_tag)
                 return
 
-            # Check worker capacity
             if not self._has_available_worker_capacity():
-                # This ensures message is not lost if republish fails
+                # Prevents message loss if republish fails
                 self.logger.debug(f"No available capacity, requeuing task {task_data.get(TASK.CONFIG.ID.value)}")
-                # Sleep briefly to prevent tight loop
-                time.sleep(0.1)
-                # Nack with requeue=True to put message back in queue
+                time.sleep(0.1)  # Prevent tight loop when capacity is exhausted
                 channel.basic_nack(delivery_tag=delivery_tag, requeue=True)
                 return
 
-            # Dispatch task for execution
             self._execute_task_in_isolated_process(task_data)
 
-            # This ensures message is acknowledged only when we're certain
-            # the task has been handed off to a worker process
+            # ACK only after task is handed off to worker process
             channel.basic_ack(delivery_tag=delivery_tag)
 
         except json.JSONDecodeError as json_error:
             self.logger.error(f'Failed to parse message JSON: {json_error}')
-            # ACK malformed messages to remove them from queue
             channel.basic_ack(delivery_tag=delivery_tag)
 
         except Exception as processing_error:
             self.logger.error(f'Message processing error: {processing_error}')
 
-            # This prevents message loss while allowing retry
+            # Prevent message loss while allowing retry
             try:
                 channel.basic_nack(delivery_tag=delivery_tag, requeue=True)
             except Exception as nack_error:
                 self.logger.error(f'Failed to NACK message: {nack_error}')
-                # If NACK fails, try ACK to prevent message from being stuck
+                # Fallback: prevent message from being stuck
                 try:
                     channel.basic_ack(delivery_tag=delivery_tag)
                 except Exception as e:
@@ -387,7 +371,6 @@ class WorkerComponentLauncher:
         2. Starts listening for messages from RabbitMQ
         3. Handles task distribution with fault tolerance
         """
-        # ComponentBuilder worker component
         worker_builder = ComponentBuilder(
             class_path=self.class_path,
             component_type='worker',
@@ -395,10 +378,7 @@ class WorkerComponentLauncher:
         )
         worker_component = worker_builder.build_component()
 
-        # Register worker in service discovery
         self._register_worker_component(worker_component)
-
-        # Start message processing loop
         self._start_message_processing(worker_component)
 
     @staticmethod
@@ -432,7 +412,6 @@ class WorkerComponentLauncher:
         Args:
             worker_component: Worker component instance
         """
-        # Initialize message queue handler
         message_handler = MessageQueueHandler(
             class_path=self.class_path,
             yaml_config=self.yaml_config,
@@ -442,7 +421,6 @@ class WorkerComponentLauncher:
             unique_id=worker_component.unique_id
         )
 
-        # Main message processing loop with error handling
         while True:
             try:
                 rabbitmq_receive_message(
@@ -459,7 +437,6 @@ class WorkerComponentLauncher:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Distributed Worker Component Launcher")
 
-    # Define command line arguments
     parser.add_argument("--yaml_file", type=str, required=True,
                         help="Path to YAML configuration file")
     parser.add_argument("--class_path", type=str, required=True,
@@ -467,14 +444,11 @@ if __name__ == '__main__':
     parser.add_argument("--current_dir", type=str, required=True,
                         help="Current working directory")
 
-    # Parse arguments
     args = parser.parse_args()
-    # Add current directory to Python path for module discovery
     sys.path.append(args.current_dir)
 
     AstraFlux(yaml_path=args.yaml_file, current_dir=args.current_dir)
 
-    # Launch the worker component, passing config paths for message processing
     WorkerComponentLauncher(
         class_path=args.class_path,
         yaml_config=args.yaml_file,

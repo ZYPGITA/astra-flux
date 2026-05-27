@@ -33,7 +33,6 @@ class ServiceComponentLauncher:
         2. Registers the service in the service discovery database
         3. Starts the RPC server to handle incoming requests
         """
-        # ComponentBuilder service component with dynamic class loading
         service_builder = ComponentBuilder(
             class_path=self.class_path,
             component_type='service',
@@ -41,16 +40,11 @@ class ServiceComponentLauncher:
         )
         service_component = service_builder.build_component()
 
-        # Prepare service registration data
         service_registration_data = self._prepare_service_data(service_component)
-
-        # Register service in the service discovery system
         self._register_service_in_discovery(service_registration_data)
 
-        # Log successful service startup
         service_component.logger.info(f'Service component started: {service_registration_data}')
 
-        # Start RPC server to handle incoming requests
         self._start_rpc_server(service_component)
 
     @staticmethod
@@ -99,7 +93,6 @@ class ServiceComponentLauncher:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Distributed Service Component Launcher")
 
-    # Define command line arguments
     parser.add_argument("--yaml_file", type=str, required=True,
                         help="Path to YAML configuration file")
     parser.add_argument("--class_path", type=str, required=True,
@@ -107,7 +100,6 @@ if __name__ == '__main__':
     parser.add_argument("--current_dir", type=str, required=True,
                         help="Current working directory")
 
-    # Parse arguments
     args = parser.parse_args()
 
     from astraflux import AstraFlux
@@ -115,7 +107,6 @@ if __name__ == '__main__':
 
     af = AstraFlux(yaml_path=args.yaml_file, current_dir=args.current_dir)
 
-    # Add current directory to Python path for module discovery
     sys.path.append(args.current_dir)
 
     from astraflux.boot.component_builder import ComponentBuilder
@@ -125,5 +116,4 @@ if __name__ == '__main__':
         redis_store_worker_data, start_consumer
     )
 
-    # Launch the service component
     ServiceComponentLauncher(class_path=args.class_path).launch_service()
