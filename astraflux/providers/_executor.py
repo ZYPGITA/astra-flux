@@ -84,8 +84,6 @@ class RetryableThreadPool:
         self.retry_delay = retry_delay
 
     def submit(self, func: Callable, *args, max_retries: int = 3, **kwargs) -> int:
-        if not self.is_running:
-            raise RuntimeError("ThreadPool is not running. Call start() first")
 
         with self.lock:
             task_id = self.total_tasks
