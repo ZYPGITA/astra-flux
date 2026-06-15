@@ -155,8 +155,11 @@ class MongoDatabase:
         """
         return self._collection.count_documents(filter=query)
 
-    def find_paginated(self, query: Dict, fields: Dict = None, limit: int = 10, skip: int = 0,
-                       sort_field: str = 'create_time', sort_order: int = -1) -> Tuple[int, List[Dict]]:
+    def find_paginated(
+            self, query: Dict, fields: Dict = None,
+            limit: int = DEFAULTS.MONGODB_PAGINATION_DEFAULT_LIMIT,
+            skip: int = DEFAULTS.MONGODB_PAGINATION_DEFAULT_SKIP,
+            sort_field: str = 'create_time', sort_order: int = -1) -> Tuple[int, List[Dict]]:
         """
         Retrieves a paginated and sorted subset of documents matching the query.
 

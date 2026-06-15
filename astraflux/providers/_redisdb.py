@@ -12,7 +12,7 @@ from redis import Redis
 from astraflux.core import global_manager
 from astraflux.config.constants import *
 
-DEFAULT_MAX_PROCESS = 10
+DEFAULT_MAX_PROCESS = DEFAULTS.WORKER_DEFAULT_MAX_PROCESS
 
 
 class WorkerRegistry:
@@ -46,8 +46,8 @@ class WorkerRegistry:
             db=self._db,
             max_connections=self._max_connections,
             decode_responses=False,
-            socket_timeout=5,
-            socket_connect_timeout=5,
+            socket_timeout=DEFAULTS.REDIS_SOCKET_TIMEOUT,
+            socket_connect_timeout=DEFAULTS.REDIS_SOCKET_TIMEOUT,
             retry_on_timeout=True
         )
 
@@ -156,7 +156,7 @@ class WorkerRegistry:
                         zadd_args.append(str(process_id))
                     pipe.execute_command('ZADD', run_process_key, *zadd_args)
 
-                expire_time = 86400
+                expire_time = DEFAULTS.REDIS_DEFAULT_EXPIRE_SECONDS
                 pipe.expire(main_key, expire_time)
                 pipe.expire(max_process_key, expire_time)
                 pipe.expire(run_process_key, expire_time)
@@ -273,7 +273,8 @@ class WorkerRegistry:
             self.logger.error(f"Error updating max_process: {e}")
             return False
 
-    def increment_max_process(self, unique_id: str, delta: int = 1) -> Optional[int]:
+    def increment_max_process(self, unique_id: str, delta: int = DEFAULTS.REDIS_DEFAULT_INCREMENT_DELTA) -> Optional[
+        int]:
         """
         Increment max process count atomically.
 
@@ -720,7 +721,10 @@ class WorkerRegistry:
             self.logger.error(f"Get all Server Error: {e}")
             return []
 
-    def refresh_service_expiry(self, server_name: str, expire_seconds: int = 86400, min_remaining_seconds: int = 0) -> bool:
+    def refresh_service_expiry(
+            self, server_name: str,
+            expire_seconds: int = DEFAULTS.REDIS_DEFAULT_EXPIRE_SECONDS,
+            min_remaining_seconds: int = 0) -> bool:
         """
         Refresh expiration time for all Redis keys associated with a service.
 

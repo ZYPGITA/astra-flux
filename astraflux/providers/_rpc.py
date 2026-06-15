@@ -191,7 +191,7 @@ class RpcCaller:
         while self.response is None:
             if time.time() - start_time > self.timeout:
                 raise TimeoutError(f"RPC call to {service_name}.{method_name} timed out after {self.timeout}s")
-            self.connection.process_data_events(time_limit=1)
+            self.connection.process_data_events(time_limit=DEFAULTS.RABBITMQ_PROCESS_DATA_EVENTS_TIME_LIMIT)
 
         if isinstance(self.response, dict):
             status = self.response.get('status')

@@ -25,7 +25,8 @@ class RabbitMQError:
 class RabbitMQBroker:
     """Thread-safe implementation for RabbitMQ producer and consumer operations"""
 
-    def __init__(self, config: dict, logger: logging, connection_pool_size: int = 5):
+    def __init__(self, config: dict, logger: logging,
+                 connection_pool_size: int = DEFAULTS.RABBITMQ_CONNECTION_POOL_SIZE):
         """
         Initialize the thread-safe RabbitMQ producer/consumer
 
@@ -54,11 +55,11 @@ class RabbitMQBroker:
             port=self._port,
             virtual_host=self._virtual_host,
             credentials=pika.PlainCredentials(self._user, self._password),
-            heartbeat=30,
-            blocked_connection_timeout=300,
-            connection_attempts=3,
-            retry_delay=1,
-            socket_timeout=5
+            heartbeat=DEFAULTS.RABBITMQ_HEARTBEAT,
+            blocked_connection_timeout=DEFAULTS.RABBITMQ_BLOCKED_CONNECTION_TIMEOUT,
+            connection_attempts=DEFAULTS.RABBITMQ_CONNECTION_ATTEMPTS,
+            retry_delay=DEFAULTS.RABBITMQ_CONNECTION_RETRY_DELAY,
+            socket_timeout=DEFAULTS.RABBITMQ_SOCKET_TIMEOUT
         )
 
         self._declared_queues = set()
@@ -213,7 +214,7 @@ class RabbitMQBroker:
                         durable=True,
                         auto_delete=False,
                         exclusive=False,
-                        arguments={'x-max-priority': 10}
+                        arguments={'x-max-priority': DEFAULTS.RABBITMQ_MAX_PRIORITY}
                     )
                     self._declared_queues.add(queue)
                     self.logger.debug(f"Queue declared: {queue}")
@@ -239,21 +240,22 @@ class RabbitMQBroker:
         conn_id = self._get_producer_connection_id()
         return channel == self._producer_channels.get(conn_id)
 
-    def rabbitmq_send_message(self, queue: str, message: dict, priority: int = 0):
+    def rabbitmq_send_message(self, queue: str, message: dict, priority: int = DEFAULTS.RABBITMQ_DEFAULT_PRIORITY):
         """
         Send a thread-safe message to specified RabbitMQ queue with retry mechanism
 
         Args:
             queue (str): Name of the target queue
             message (dict): Message content to send
-            priority (int): Message priority (0-9, default 0)
+            priority (int): Message priority (0 to DEFAULTS.RABBITMQ_MAX_PRIORITY-1,
+            default DEFAULTS.RABBITMQ_DEFAULT_PRIORITY)
 
         Raises:
             AMQPConnectionError: If message sending fails after max retries
             AMQPChannelError: If channel error occurs after max retries
             StreamLostError: If connection lost during sending after max retries
         """
-        max_retries = 3
+        max_retries = DEFAULTS.RABBITMQ_SEND_RETRY_MAX
         retry_count = 0
 
         while retry_count < max_retries:
@@ -262,8 +264,8 @@ class RabbitMQBroker:
                 channel = self._ensure_queue_declared(queue, channel)
 
                 properties = pika.BasicProperties(
-                    delivery_mode=2,
-                    priority=min(max(priority, 0), 9),
+                    delivery_mode=DEFAULTS.RABBITMQ_PERSISTENT_DELIVERY,
+                    priority=min(max(priority, DEFAULTS.RABBITMQ_DEFAULT_PRIORITY), DEFAULTS.RABBITMQ_MAX_PRIORITY - 1),
                     content_type='application/json',
                     timestamp=int(time.time())
                 )

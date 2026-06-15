@@ -220,6 +220,82 @@ class WEB:
         BIND_IP = '0.0.0.0'
 
 
+class DEFAULTS:
+    """
+    Centralized default values and magic constants for all subsystems.
+    Use these instead of hard-coded numeric literals throughout the codebase.
+    """
+
+    # ── Logging ──────────────────────────────────────────────────────────
+    LOGGER_MAX_BYTES = 10 * 1024 * 1024
+    LOGGER_BACKUP_COUNT = 5
+
+    # ── Task Scheduler ───────────────────────────────────────────────────
+    SCHEDULER_TASK_FETCH_LIMIT = 1000
+    SCHEDULER_LOCK_REFRESH_INTERVAL = 5
+    SCHEDULER_LOCK_EXPIRE_SECONDS = 15
+    SCHEDULER_TTL_EXPIRE_SECONDS = 60
+    SCHEDULER_ERROR_BACKOFF_SECONDS = 5
+    SCHEDULER_THREAD_JOIN_TIMEOUT = 10.0
+
+    # ── Worker (task consumer) ───────────────────────────────────────────
+    WORKER_DEFAULT_MAX_PROCESS = 10
+    WORKER_STATUS_CACHE_TTL = 5
+    WORKER_CAPACITY_SYNC_INTERVAL = 30
+    WORKER_AVAILABLE_SLOTS_CACHE_TTL = 1
+    WORKER_CAPACITY_EXHAUSTED_SLEEP = 0.1
+    WORKER_PERSISTENT_ERROR_SLEEP = 0.5
+
+    # ── Thread / Process Executor ────────────────────────────────────────
+    EXECUTOR_DEFAULT_MAX_WORKERS = 5
+    EXECUTOR_DEFAULT_RETRY_DELAY = 1.0
+    EXECUTOR_DEFAULT_MAX_QUEUE_SIZE = 5000
+    EXECUTOR_DEFAULT_MAX_RETRIES = 3
+    EXECUTOR_TASK_QUEUE_PUT_TIMEOUT = 30
+    EXECUTOR_QUEUE_GET_TIMEOUT = 1
+    EXECUTOR_LOOP_YIELD_INTERVAL = 0.1
+    EXECUTOR_SHUTDOWN_TIMEOUT = 5.0
+    EXECUTOR_SIGTERM_JOIN_TIMEOUT = 2.0
+
+    # ── RabbitMQ ──────────────────────────────────────────────────────────
+    RABBITMQ_CONNECTION_POOL_SIZE = 5
+    RABBITMQ_BLOCKED_CONNECTION_TIMEOUT = 300
+    RABBITMQ_SOCKET_TIMEOUT = 5
+    RABBITMQ_DEFAULT_PRIORITY = 0
+    RABBITMQ_MAX_PRIORITY = 10
+    RABBITMQ_PROCESS_DATA_EVENTS_TIME_LIMIT = 1
+    RABBITMQ_CONNECTION_ATTEMPTS = 3
+    RABBITMQ_CONNECTION_RETRY_DELAY = 1
+    RABBITMQ_SEND_RETRY_MAX = 3
+    RABBITMQ_HEARTBEAT = 30
+    RABBITMQ_PERSISTENT_DELIVERY = 2
+
+    # ── Redis ─────────────────────────────────────────────────────────────
+    REDIS_DEFAULT_EXPIRE_SECONDS = 86400
+    REDIS_DEFAULT_INCREMENT_DELTA = 1
+    REDIS_SOCKET_TIMEOUT = 5
+
+    # ── MongoDB / Pagination ─────────────────────────────────────────────
+    MONGODB_PAGINATION_DEFAULT_LIMIT = 10
+    MONGODB_PAGINATION_DEFAULT_SKIP = 0
+
+    # ── Process Management (launcher / web UI) ───────────────────────────
+    PROCESS_WAIT_TIMEOUT = 3
+    PROCESS_TASKKILL_TIMEOUT = 5
+
+    # ── Snowflake ID Generator ────────────────────────────────────────────
+    SNOWFLAKE_TWITTER_EPOCH = 1288834974657
+    SNOWFLAKE_DATACENTER_ID_BITS = 5
+    SNOWFLAKE_MACHINE_ID_BITS = 5
+    SNOWFLAKE_SEQUENCE_BITS = 12
+    SNOWFLAKE_DEFAULT_SEQUENCE = 0
+    SNOWFLAKE_SMALL_ROLLBACK_THRESHOLD_MS = 100
+    SNOWFLAKE_ROLLBACK_PADDING_MS = 1
+
+    # ── Cron Expression ───────────────────────────────────────────────────
+    CRON_PARTS_COUNT = 6
+
+
 CONFIGS = [
     MONGODB,
     REDIS,

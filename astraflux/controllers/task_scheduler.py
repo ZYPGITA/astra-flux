@@ -96,7 +96,7 @@ class TaskScheduler:
             self._execute_lock.release()
 
     @staticmethod
-    def _fetch_tasks(limit=1000) -> List[Dict]:
+    def _fetch_tasks(limit=DEFAULTS.SCHEDULER_TASK_FETCH_LIMIT) -> List[Dict]:
         """
         Fetch active tasks from MongoDB that need scheduling.
 
