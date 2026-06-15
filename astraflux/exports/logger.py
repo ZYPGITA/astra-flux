@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from astraflux.core import global_manager
+from astraflux.config.constants import DEFAULTS
 
 
-def logger(dirname=None, filename=None):
+def logger(dirname=None, filename=None, max_bytes: int = DEFAULTS.LOGGER_MAX_BYTES,
+           backup_count: int = DEFAULTS.LOGGER_BACKUP_COUNT):
     """
     Get a thread-safe logger instance for the specified directory and filename.
 
@@ -16,6 +18,8 @@ def logger(dirname=None, filename=None):
                                 be stored directly in the base log directory.
         filename (str, optional): The name of the log file (without extension).
                                  If None, a default filename will be used.
+        max_bytes (int, optional): The maximum size in bytes of the
+        backup_count (default 5).
 
     Returns:
         logging.Logger: A configured thread-safe logger instance that writes
@@ -57,6 +61,6 @@ def logger(dirname=None, filename=None):
             logging.Logger: The logger instance for the specified directory
                           and filename.
         """
-        return fixture_logger.get_logger(dirname, filename)
+        return fixture_logger.get_logger(dirname, filename=filename, max_bytes=max_bytes, backup_count=backup_count)
 
     return global_manager.bind_fixture_func(_backcall)()

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from astraflux.core import global_manager
+from astraflux.config.constants import DEFAULTS
 
 
 def redis_store_worker_data(data: dict):
@@ -255,7 +256,10 @@ def get_all_service_names():
     return global_manager.bind_fixture_func(_backcall)()
 
 
-def refresh_service_expiry(server_name: str, expire_seconds: int = 86400, min_remaining_seconds: int = 0):
+def refresh_service_expiry(
+        server_name: str,
+        expire_seconds: int = DEFAULTS.REDIS_DEFAULT_EXPIRE_SECONDS,
+        min_remaining_seconds: int = 0):
     """
     Refresh the expiration time for all Redis keys associated with a specific service.
 

@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from astraflux.core import global_manager
+from astraflux.config.constants import DEFAULTS
 
 
-def thread_executor(max_workers: int = 5, retry_delay: float = 1.0):
+def thread_executor(
+        max_workers: int = DEFAULTS.EXECUTOR_DEFAULT_MAX_WORKERS,
+        retry_delay: float = DEFAULTS.EXECUTOR_DEFAULT_RETRY_DELAY):
     """
     Get and configure a global thread pool executor instance with custom parameters.
 
@@ -27,7 +30,9 @@ def thread_executor(max_workers: int = 5, retry_delay: float = 1.0):
     return global_manager.bind_fixture_func(_backcall)()
 
 
-def process_executor(max_workers: int = 5, retry_delay: float = 1.0):
+def process_executor(
+        max_workers: int = DEFAULTS.EXECUTOR_DEFAULT_MAX_WORKERS,
+        retry_delay: float = DEFAULTS.EXECUTOR_DEFAULT_RETRY_DELAY):
     """
     Get and configure a global process pool executor instance with custom parameters.
 

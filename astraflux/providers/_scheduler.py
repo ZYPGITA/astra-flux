@@ -31,7 +31,7 @@ class AdvancedCronScheduler:
             ValueError: When cron expression is invalid
         """
         self.cron_parts = cron_expression.strip().split()
-        if len(self.cron_parts) != 6:
+        if len(self.cron_parts) != DEFAULTS.CRON_PARTS_COUNT:
             raise ValueError("Invalid cron expression (requires 6 parts: second minute hour day month weekday)")
 
         self.timezone = _parse_timezone(timezone)
@@ -313,8 +313,8 @@ class DistributedScheduler:
         self._scheduler_active = Event()
         self._scheduler_thread = None
 
-        self._lock_refresh_interval = 5
-        self._lock_expire_seconds = 15
+        self._lock_refresh_interval = DEFAULTS.SCHEDULER_LOCK_REFRESH_INTERVAL
+        self._lock_expire_seconds = DEFAULTS.SCHEDULER_LOCK_EXPIRE_SECONDS
         self._active_lock_refreshers: Dict[str, Event] = {}
         self._lock_management_lock = threading.RLock()
 
@@ -350,7 +350,6 @@ class DistributedScheduler:
 
             # Use fixed TTL value for index to avoid "cannot change TTL" errors on restart
             # Internal lock timeout is _lock_expire_seconds but TTL index uses a safe margin
-            TTL_EXPIRE_SECONDS = 60
             existing_indexes = self._job_locks.index_information()
             has_ttl_index = any(
                 info.get("expireAfterSeconds") is not None
@@ -359,7 +358,7 @@ class DistributedScheduler:
             if not has_ttl_index:
                 self._job_locks.create_index(
                     "expire_at",
-                    expireAfterSeconds=TTL_EXPIRE_SECONDS
+                    expireAfterSeconds=DEFAULTS.SCHEDULER_TTL_EXPIRE_SECONDS
                 )
 
             self._job_locks.create_index([("job_id", 1), ("lock_type", 1)], unique=True)
@@ -402,7 +401,7 @@ class DistributedScheduler:
 
         # Wait for scheduler thread to finish
         if self._scheduler_thread and self._scheduler_thread.is_alive():
-            self._scheduler_thread.join(timeout=10.0)
+            self._scheduler_thread.join(timeout=DEFAULTS.SCHEDULER_THREAD_JOIN_TIMEOUT)
             if self._scheduler_thread.is_alive():
                 self.logger.warning("Scheduler thread did not terminate gracefully")
 
@@ -431,15 +430,15 @@ class DistributedScheduler:
                         break
 
                 # Sleep with small intervals for responsive shutdown
-                for _ in range(10):
+                for _ in range(int(1.0 / DEFAULTS.EXECUTOR_LOOP_YIELD_INTERVAL)):
                     if not self._scheduler_active.is_set():
                         break
-                    time.sleep(0.1)
+                    time.sleep(DEFAULTS.EXECUTOR_LOOP_YIELD_INTERVAL)
 
             except Exception as e:
                 self.logger.debug(f"Error in scheduling loop: {str(e)}")
                 self._execution_stats['jobs_failed'] += 1
-                time.sleep(5)
+                time.sleep(DEFAULTS.SCHEDULER_ERROR_BACKOFF_SECONDS)
 
     def _find_due_jobs(self, current_time: datetime) -> List[Dict]:
         """
@@ -759,10 +758,10 @@ class DistributedScheduler:
                 self.logger.error(f"Lock refresh failed for {lock_key}: {str(e)}")
                 break
 
-            for _ in range(self._lock_refresh_interval * 2):
+            for _ in range(int(self._lock_refresh_interval / DEFAULTS.WORKER_PERSISTENT_ERROR_SLEEP)):
                 if stop_event.is_set():
                     break
-                time.sleep(0.5)
+                time.sleep(DEFAULTS.WORKER_PERSISTENT_ERROR_SLEEP)
 
         self._cleanup_job_lock(lock_key, execution_mode)
         self.logger.debug(f"Lock refresh stopped for: {lock_key}")

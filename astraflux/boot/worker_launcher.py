@@ -155,7 +155,7 @@ class MessageQueueHandler:
 
         self._available_slots_cache = None
         self._available_slots_cache_time = 0
-        self._AVAILABLE_SLOTS_CACHE_TTL = 1
+        self._AVAILABLE_SLOTS_CACHE_TTL = DEFAULTS.WORKER_AVAILABLE_SLOTS_CACHE_TTL
 
         self._init_capacity_from_redis()
 
@@ -287,11 +287,12 @@ class MessageQueueHandler:
             from astraflux.exports import redis_get_max_process
             self._max_process = redis_get_max_process(unique_id=self.unique_id)
             if self._max_process is None:
-                self._max_process = 10
+                self._max_process = DEFAULTS.WORKER_DEFAULT_MAX_PROCESS
             self.logger.debug(f"Initialized capacity: max_process={self._max_process}")
         except Exception as e:
-            self.logger.warning(f"Failed to init capacity from Redis: {e}, using default max_process=10")
-            self._max_process = 10
+            self.logger.warning(f"Failed to init capacity from Redis: {e}, "
+                                f"using default max_process={DEFAULTS.WORKER_DEFAULT_MAX_PROCESS}")
+            self._max_process = DEFAULTS.WORKER_DEFAULT_MAX_PROCESS
 
     def _get_cached_available_slots(self):
         """
@@ -397,7 +398,7 @@ class WorkerComponentLauncher:
             BUILD.CONFIG.WORKER_VERSION.value: worker_component.version,
             BUILD.CONFIG.WORKER_PID.value: os.getpid(),
             BUILD.CONFIG.WORKER_FUNCTIONS.value: worker_component.functions,
-            BUILD.CONFIG.WORKER_MAX_PROCESS.value: 10,
+            BUILD.CONFIG.WORKER_MAX_PROCESS.value: DEFAULTS.WORKER_DEFAULT_MAX_PROCESS,
             BUILD.CONFIG.WORKER_RUN_PROCESS.value: []
         }
 
@@ -431,7 +432,7 @@ class WorkerComponentLauncher:
                 worker_component.logger.error(
                     f'Worker {worker_component.worker_name} connection error: {connection_error}'
                 )
-                time.sleep(0.5)  # Prevent tight loop on persistent errors
+                time.sleep(DEFAULTS.WORKER_PERSISTENT_ERROR_SLEEP)
 
 
 if __name__ == '__main__':

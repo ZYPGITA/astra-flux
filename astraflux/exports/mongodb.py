@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from astraflux.core import global_manager
+from astraflux.config.constants import DEFAULTS
 
 
 def mongodb_find_one_and_update_from_task(query: dict, data: dict, upsert: bool = True):
@@ -137,7 +138,10 @@ def mongodb_find_from_task(query: dict, fields: dict):
 
 
 def mongodb_find_paginated_from_task(
-        query: dict, fields: dict, limit: int = 10, skip: int = 0,
+        query: dict,
+        fields: dict,
+        limit: int = DEFAULTS.MONGODB_PAGINATION_DEFAULT_LIMIT,
+        skip: int = DEFAULTS.MONGODB_PAGINATION_DEFAULT_SKIP,
         sort_field: str = 'create_time', sort_order: int = -1):
     """
     Retrieves a paginated and sorted subset of documents matching the query from the 'TaskCollection' collection.

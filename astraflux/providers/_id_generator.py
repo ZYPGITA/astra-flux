@@ -32,7 +32,8 @@ class SnowflakeGenerator:
             cls._instance.__initialized = False
         return cls._instance
 
-    def __init__(self, ipaddress, datacenter_id: int = None, machine_id: int = None, sequence: int = 0):
+    def __init__(self, ipaddress, datacenter_id: int = None, machine_id: int = None,
+                 sequence: int = DEFAULTS.SNOWFLAKE_DEFAULT_SEQUENCE):
         """
         Initializes the Snowflake ID generator.
 
@@ -48,11 +49,11 @@ class SnowflakeGenerator:
         self.__initialized = True
         self.ipaddress = ipaddress
 
-        self.start_timestamp = 1288834974657
+        self.start_timestamp = DEFAULTS.SNOWFLAKE_TWITTER_EPOCH
 
-        self.datacenter_id_bits = 5
-        self.machine_id_bits = 5
-        self.sequence_bits = 12
+        self.datacenter_id_bits = DEFAULTS.SNOWFLAKE_DATACENTER_ID_BITS
+        self.machine_id_bits = DEFAULTS.SNOWFLAKE_MACHINE_ID_BITS
+        self.sequence_bits = DEFAULTS.SNOWFLAKE_SEQUENCE_BITS
 
         self.max_datacenter_id = (1 << self.datacenter_id_bits) - 1
         self.max_machine_id = (1 << self.machine_id_bits) - 1
@@ -72,7 +73,7 @@ class SnowflakeGenerator:
         else:
             self.machine_id: int = int(self.ipaddress.split('.')[-1])
 
-        self.sequence = sequence
+        self.sequence = sequence if sequence is not None else DEFAULTS.SNOWFLAKE_DEFAULT_SEQUENCE
         self.last_timestamp = -1
 
     @staticmethod
@@ -116,10 +117,10 @@ class SnowflakeGenerator:
         rollback_ms = self.last_timestamp - timestamp
 
         if rollback_ms > 0:
-            if rollback_ms <= 100:
+            if rollback_ms <= DEFAULTS.SNOWFLAKE_SMALL_ROLLBACK_THRESHOLD_MS:
                 # Small clock rollback — wait until we reach last_timestamp
                 import time as _time
-                _time.sleep(rollback_ms / 1000.0 + 0.001)
+                _time.sleep(rollback_ms / 1000.0 + DEFAULTS.SNOWFLAKE_ROLLBACK_PADDING_MS / 1000.0)
                 timestamp = self._current_timestamp()
             else:
                 # Large clock rollback — reset epoch to avoid duplicate IDs

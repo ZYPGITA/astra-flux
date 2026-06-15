@@ -3,7 +3,6 @@
 import sys
 import os
 import signal
-import time
 import psutil
 import logging
 import subprocess
@@ -73,7 +72,7 @@ class ServiceLauncher:
                         process.kill()
                         # Wait for process to fully exit
                         try:
-                            process.wait(timeout=3)
+                            process.wait(timeout=DEFAULTS.PROCESS_WAIT_TIMEOUT)
                         except (psutil.TimeoutExpired, psutil.NoSuchProcess):
                             pass
                         break
@@ -222,7 +221,7 @@ class ServiceLauncher:
                 if os.name == 'nt':
                     subprocess.run(
                         ['taskkill', '/F', '/PID', str(pid)],
-                        capture_output=True, timeout=5, check=False
+                        capture_output=True, timeout=DEFAULTS.PROCESS_TASKKILL_TIMEOUT, check=False
                     )
                 else:
                     os.kill(pid, signal.SIGKILL)

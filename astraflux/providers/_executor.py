@@ -35,8 +35,8 @@ class ExecutorTask:
     func: Callable
     args: tuple = ()
     kwargs: dict = None
-    max_retries: int = 3
-    retry_delay: float = 1.0
+    max_retries: int = DEFAULTS.EXECUTOR_DEFAULT_MAX_RETRIES
+    retry_delay: float = DEFAULTS.EXECUTOR_DEFAULT_RETRY_DELAY
     status: str = STATUS.PENDING.value
     retry_count: int = 0
     result: Any = None
@@ -63,7 +63,10 @@ class RetryableThreadPool:
         retry_delay: Base delay time between retries in seconds (default: 1.0)
     """
 
-    def __init__(self, logger, max_workers: int = 5, retry_delay: float = 1.0, max_queue_size: int = 5000):
+    def __init__(self, logger,
+                 max_workers: int = DEFAULTS.EXECUTOR_DEFAULT_MAX_WORKERS,
+                 retry_delay: float = DEFAULTS.EXECUTOR_DEFAULT_RETRY_DELAY,
+                 max_queue_size: int = DEFAULTS.EXECUTOR_DEFAULT_MAX_QUEUE_SIZE):
         self.logger = logger
         self.max_workers = max_workers
         self.retry_delay = retry_delay
@@ -79,11 +82,12 @@ class RetryableThreadPool:
         self.workers = []
         self.is_running = False
 
-    def update(self, max_workers: int = 5, retry_delay: float = 1.0):
+    def update(self, max_workers: int = DEFAULTS.EXECUTOR_DEFAULT_MAX_WORKERS,
+               retry_delay: float = DEFAULTS.EXECUTOR_DEFAULT_RETRY_DELAY):
         self.max_workers = max_workers
         self.retry_delay = retry_delay
 
-    def submit(self, func: Callable, *args, max_retries: int = 3, **kwargs) -> int:
+    def submit(self, func: Callable, *args, max_retries: int = DEFAULTS.EXECUTOR_DEFAULT_MAX_RETRIES, **kwargs) -> int:
 
         with self.lock:
             task_id = self.total_tasks
@@ -95,8 +99,9 @@ class RetryableThreadPool:
                 max_retries=max_retries,
                 retry_delay=self.retry_delay
             )
+            self.results[task_id] = task
             try:
-                self.task_queue.put(task, timeout=30)
+                self.task_queue.put(task, timeout=DEFAULTS.EXECUTOR_TASK_QUEUE_PUT_TIMEOUT)
             except queue.Full:
                 raise RuntimeError(
                     f"ThreadPool '{self.name if hasattr(self, 'name') else ''}' queue full "
@@ -123,7 +128,7 @@ class RetryableThreadPool:
     def _worker(self):
         while self.is_running:
             try:
-                task = self.task_queue.get(timeout=1)
+                task = self.task_queue.get(timeout=DEFAULTS.EXECUTOR_QUEUE_GET_TIMEOUT)
             except queue.Empty:
                 continue
 
@@ -280,7 +285,7 @@ def _worker_process(
 
     while is_running.value:
         try:
-            task_dict = task_queue.get(timeout=1)
+            task_dict = task_queue.get(timeout=DEFAULTS.EXECUTOR_QUEUE_GET_TIMEOUT)
         except queue.Empty:
             continue
 
@@ -368,7 +373,8 @@ class RetryableProcessPool:
         retry_delay: Base delay time between retries in seconds (default: 1.0)
     """
 
-    def __init__(self, logger=None, max_workers: int = None, retry_delay: float = 1.0):
+    def __init__(self, logger=None, max_workers: int = None,
+                 retry_delay: float = DEFAULTS.EXECUTOR_DEFAULT_RETRY_DELAY):
         self.logger = logger
         self.max_workers = max_workers or mp.cpu_count()
         self.retry_delay = retry_delay
@@ -410,11 +416,12 @@ class RetryableProcessPool:
                 pass  # Already set
             self._start_method_set = True
 
-    def update(self, max_workers: int = 5, retry_delay: float = 1.0):
+    def update(self, max_workers: int = DEFAULTS.EXECUTOR_DEFAULT_MAX_WORKERS,
+               retry_delay: float = DEFAULTS.EXECUTOR_DEFAULT_RETRY_DELAY):
         self.max_workers = max_workers
         self.retry_delay = retry_delay
 
-    def submit(self, func: Callable, *args, max_retries: int = 3, **kwargs) -> int:
+    def submit(self, func: Callable, *args, max_retries: int = DEFAULTS.EXECUTOR_DEFAULT_MAX_RETRIES, **kwargs) -> int:
         with self._submit_lock:
             task_id = self._task_counter
             task = ExecutorTask(
@@ -488,7 +495,7 @@ class RetryableProcessPool:
                 if self.logger:
                     self.logger.warning("Timeout waiting for task completion")
                 break
-            time.sleep(0.1)
+            time.sleep(DEFAULTS.EXECUTOR_LOOP_YIELD_INTERVAL)
 
         self.is_running.value = False
 
@@ -501,7 +508,7 @@ class RetryableProcessPool:
             else:
                 worker.join()
 
-    def shutdown(self, timeout: float = 5):
+    def shutdown(self, timeout: float = DEFAULTS.EXECUTOR_SHUTDOWN_TIMEOUT):
         self.is_running.value = False
 
         start_time = time.time()
@@ -511,7 +518,7 @@ class RetryableProcessPool:
                 worker.join(timeout=remaining)
             if worker.is_alive():
                 worker.terminate()
-                worker.join(timeout=2)  # Wait for SIGTERM to take effect
+                worker.join(timeout=DEFAULTS.EXECUTOR_SIGTERM_JOIN_TIMEOUT)
 
         # Only shut down the manager AFTER all workers have exited,
         # otherwise workers still accessing shared memory (results, task_status, etc.)

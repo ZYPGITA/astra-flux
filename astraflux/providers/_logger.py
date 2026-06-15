@@ -35,8 +35,8 @@ class RotatingLogger:
         if not os.path.exists(self._base_path):
             os.makedirs(self._base_path, exist_ok=True)
 
-    def get_logger(self, dirname: str, filename: str, max_bytes: int = 10 * 1024 * 1024,
-                   backup_count: int = 5) -> logging.Logger:
+    def get_logger(self, dirname: str, filename: str, max_bytes: int = DEFAULTS.LOGGER_MAX_BYTES,
+                   backup_count: int = DEFAULTS.LOGGER_BACKUP_COUNT) -> logging.Logger:
         """
         Get or create a thread-safe logger for the specified directory and filename.
 
